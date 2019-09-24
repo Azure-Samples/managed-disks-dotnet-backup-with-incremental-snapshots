@@ -54,21 +54,21 @@ namespace BackupManagedDisksWithIncrementalSnapshots
         static async Task Main(string[] args)
         {
             //The subscription Id where the incremental snapshots of the managed disk are created
-            var subscriptionId = "c98283f6-ab45-4304-bf2f-842897cc6412";
+            string subscriptionId = "yourSubscriptionId";
 
             //The resource group name where incremental snapshots of the managed disks are created
-            var resourceGroupName = "SNAPSHOTBILLINGTEST";
+            string resourceGroupName = "yourResourceGroupName";
 
             //The name of the disk that is backed up with incremental snapshots in the source region
-            var diskName = "isnapshot_data_disk1";
+            string diskName = "yourManagedDiskName";
 
             //The name of the storage account in the target region where incremental snapshots from source region are copied to a base blob. 
-            string targetStorageAccountName = "ramanbackupstorage";
+            string targetStorageAccountName = "yourTargetStorageAccountName";
 
             //The shared access signatures(SAS) token of the storage account 
             //Learn about SAS here: https://docs.microsoft.com/en-us/azure/storage/common/storage-sas-overview
             //Follow the instructions to generate the SAS token of a storage account https://docs.microsoft.com/en-us/azure/storage/common/storage-account-sas-create-dotnet
-            string targetStorageAccountSASToken = "?sv=2018-03-28&ss=bfqt&srt=sco&sp=rwdlacup&se=2019-12-31T10:36:43Z&st=2019-09-23T01:36:43Z&spr=https&sig=wQPtVbnMDWfNAOQHtV1uRjMYtKU11%2BepJ3fO%2B8G4lmc%3D";
+            string targetStorageAccountSASToken = "sasTokenOfTargetStorageAccount";
 
             //the name of the container where base blob is stored on the target storage account
             string targetContainerName = "yourcontainername";
@@ -330,9 +330,9 @@ namespace BackupManagedDisksWithIncrementalSnapshots
         private static ServiceClientCredentials GetClientCredential()
         {
 
-            string tenantId = "a6ac40f6-b03e-4e24-977b-ae2651fa9112";
-            var applicationId = "3298204f-4168-47f9-9f89-a18f63fd03c8";
-            var applicatioSecretKey = "HBC8s5DIv1r+KctTAKdi18UftG/gbCDhPSSCOvMVzeI=";
+            string tenantId = "";
+            var applicationId = "";
+            var applicatioSecretKey = "";
 
             var context = new Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext("https://login.windows.net/" + tenantId);
 
