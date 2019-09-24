@@ -37,14 +37,15 @@ get a FREE trial account [here](http://go.microsoft.com/fwlink/?LinkId=330212).
 
 ## Runnning the sample
 
-- Set the value of following variables in the Main method in Program.cs file
+- Set the value of the following variables in the Main method in Program.cs file
   * subscriptionId: The subscription Id where the incremental snapshots of the managed disk are created
   * resourceGroupName: The resource group name where incremental snapshots of the managed disks are created
   * diskName: The name of the disk that is backed up with incremental snapshots in the source region
   * targetStorageAccountName: The name of the storage account in the target region where incremental snapshots from source region are copied to a base blob. 
   * targetStorageAccountSASToken: The shared access signatures(SAS) token of the storage account
   * targetContainerName: The name of the container where base blob is stored on the target storage account
-  * targetBaseBlobName: The name of the base VHD (blob) used for storing the backups in the target storage account 
+  * targetBaseBlobName: The name of the base VHD (blob) used for storing the backups in the target storage account
+ - Hit F5 to run the sample
           
 
 ## Key concepts
