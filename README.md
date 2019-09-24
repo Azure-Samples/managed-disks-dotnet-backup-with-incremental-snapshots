@@ -23,7 +23,6 @@ In this sample, we demonstrate the following:
 
 - If you don't have a Microsoft Azure subscription you can
 get a FREE trial account [here](http://go.microsoft.com/fwlink/?LinkId=330212).
-- Use the steps [here](https//docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal) to create a service principal in your subscription. Please note down the tenantId, applicationId and secret key for the service principal. It will be used in the sample
 - Use the article [here](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/disks-incremental-snapshots) to create incremental snapshots for a managed disk that you want to backup
 - Create an Azure Storage account where you want to store your backups using the article [here](https://docs.microsoft.com/en-us/azure/storage/common/storage-quickstart-create-account?tabs=azure-portal)
 - Follow the instructions [here](https://docs.microsoft.com/en-us/azure/storage/common/storage-account-sas-create-dotnet) to generate the SAS token of the storage account 
@@ -32,19 +31,30 @@ get a FREE trial account [here](http://go.microsoft.com/fwlink/?LinkId=330212).
 
 - Clone the repository using the following command:
     git clone https://github.com/Azure-Samples/managed-disks-dotnet-backup-with-incremental-snapshots.git
-- Open the BackupManagedDisksWithIncrementalSnapshots.sln file in the root folder in Visual Studio 
+- Open the BackupManagedDisksWithIncrementalSnapshots.sln file in the root folder in Visual Studio
+- Create a local folder and download the following pre-released version of Azure Storage DotNet SDK Nuget packages:
+    * [Microsoft.Azure.Storage.Blob](https://mdprereleasestoragesdks.blob.core.windows.net/dotnet/Microsoft.Azure.Storage.Blob.10.0.3-Release-jenkins-dotnet-nuget-167.nupkg)
+    * [Microsoft.Azure.Storage.Common](https://mdprereleasestoragesdks.blob.core.windows.net/dotnet/Microsoft.Azure.Storage.Common.10.0.3-Release-jenkins-dotnet-nuget-167.nupkg)
+- Add the local folder where you copied the nuget packages as package sourcein the project using Visual Studio by following instructions [here](https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio#package-sources)
+- Add the following prerelease packages by selecting "Include prerelease" checkbox by following instructions [here](https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio#find-and-install-a-package)
+    * Microsoft.Azure.Storage.Blob
+    * Microsoft.Azure.Storage.Common
 - Build the solution using Visual Studio
 
 ## Runnning the sample
 
 - Set the value of the following variables in the Main method in Program.cs file
-  * subscriptionId: The subscription Id where the incremental snapshots of the managed disk are created
-  * resourceGroupName: The resource group name where incremental snapshots of the managed disks are created
-  * diskName: The name of the disk that is backed up with incremental snapshots in the source region
-  * targetStorageAccountName: The name of the storage account in the target region where incremental snapshots from source region are copied to a base blob. 
-  * targetStorageAccountSASToken: The shared access signatures(SAS) token of the storage account
-  * targetContainerName: The name of the container where base blob is stored on the target storage account
-  * targetBaseBlobName: The name of the base VHD (blob) used for storing the backups in the target storage account
+    * subscriptionId: The subscription Id where the incremental snapshots of the managed disk are created
+    * resourceGroupName: The resource group name where incremental snapshots of the managed disks are created
+    * diskName: The name of the disk that is backed up with incremental snapshots in the source region
+    * targetStorageAccountName: The name of the storage account in the target region where incremental snapshots from source region are copied to a base blob. 
+    * targetStorageAccountSASToken: The shared access signatures(SAS) token of the storage account
+    * targetContainerName: The name of the container where base blob is stored on the target storage account
+    * targetBaseBlobName: The name of the base VHD (blob) used for storing the backups in the target storage account
+ - Use the steps [here](https//docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal) to create a service principal in your subscription. Please note down the tenantId, applicationId and secret key for the service principal. Set the following variables in the GetClientCredential method in Program.cs file 
+    * tenantId
+    * applicationId
+    * applicatioSecretKey
  - Hit F5 to run the sample
           
 
