@@ -50,7 +50,8 @@ get a FREE trial account [here](http://go.microsoft.com/fwlink/?LinkId=330212).
 
 ## Key concepts
 
-Provide users with more context on the tools and services used in the sample. Explain some of the code that is being used and how services interact with each other.
+* Learn about Azure Managed Disks [here](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/managed-disks-overview)
+* Learn about incremental snapshots of Managed Disks [here]([here](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/disks-incremental-snapshots))
 
 ## Contributing
 
