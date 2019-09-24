@@ -8,7 +8,7 @@ description: "Sample to backup Managed Disks to another region using incremental
 urlFragment: "managed-disks-dotnet-backup-with-incremental-snapshots"
 ---
 
-# Backup Azure Managed Disks to another region with differential capability of incremental snapshots
+# Copy Azure Managed Disks backups to another region with differential capability of incremental snapshots
 
 Incremental snapshots provide differential capability – a unique capability available only in Azure Managed Disks. It enables customers and independent solution vendors (ISV) to build backup and disaster recovery solutions for Managed Disks. It allows you to get the changes between two  snapshots of the same disk, thus copying only changed data between two snapshots across regions, reducing time and cost for backup and disaster recovery. Read more about incremental snapshots [here](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/disks-incremental-snapshots)
 
