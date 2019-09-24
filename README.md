@@ -10,7 +10,7 @@ urlFragment: "managed-disks-dotnet-backup-with-incremental-snapshots"
 
 # Backup Azure Managed Disks to another region with differential capability of incremental snapshots
 
-Incremental snapshots provide differential capability – a unique capability available only in Azure Managed Disks. It enables customers and independent solution vendors (ISV) to build backup and disaster recovery solutions for Managed Disks. It allows you to get the changes between two  snapshots of the same disk, thus copying only changed data between two snapshots across regions, reducing time and cost for backup and disaster recovery. Read more about incremental snapshots [here](http://go.microsoft.com/fwlink/?LinkId=330212)
+Incremental snapshots provide differential capability – a unique capability available only in Azure Managed Disks. It enables customers and independent solution vendors (ISV) to build backup and disaster recovery solutions for Managed Disks. It allows you to get the changes between two  snapshots of the same disk, thus copying only changed data between two snapshots across regions, reducing time and cost for backup and disaster recovery. Read more about incremental snapshots [here](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/disks-incremental-snapshots)
 
 In this sample, we demonstrate the following:
 - How to fetch incremental snapshots created for a disk in an Azure resource group
@@ -19,7 +19,7 @@ In this sample, we demonstrate the following:
 - How to copy only the changes since the last snapshot to the base blob. 
 - How to create snapshots on the base blob after the changes are copied. These snapshots represent your point in time backup of the disk in another region. 
 
-## Prerequisites//Follow the instructions to generate the SAS token of a storage account https://docs.microsoft.com/en-us/azure/storage/common/storage-account-sas-create-dotnet
+## Prerequisites
 
 - If you don't have a Microsoft Azure subscription you can
 get a FREE trial account [here](http://go.microsoft.com/fwlink/?LinkId=330212).
@@ -30,11 +30,22 @@ get a FREE trial account [here](http://go.microsoft.com/fwlink/?LinkId=330212).
 
 ## Setup
 
-Explain how to prepare the sample once the user clones or downloads the repository. The section should outline every step necessary to install dependencies and set up any settings (for example, API keys and output folders).
+- Clone the repository using the following command:
+    git clone https://github.com/Azure-Samples/managed-disks-dotnet-backup-with-incremental-snapshots.git
+- Open the BackupManagedDisksWithIncrementalSnapshots.sln file in the root folder in Visual Studio 
+- Build the solution using Visual Studio
 
 ## Runnning the sample
 
-Outline step-by-step instructions to execute the sample and see its output. Include steps for executing the sample from the IDE, starting specific services in the Azure portal or anything related to the overall launch of the code.
+- Set the value of following variables in the Main method in Program.cs file
+  * subscriptionId: The subscription Id where the incremental snapshots of the managed disk are created
+  * resourceGroupName: The resource group name where incremental snapshots of the managed disks are created
+  * diskName: The name of the disk that is backed up with incremental snapshots in the source region
+  * targetStorageAccountName: The name of the storage account in the target region where incremental snapshots from source region are copied to a base blob. 
+  * targetStorageAccountSASToken: The shared access signatures(SAS) token of the storage account
+  * targetContainerName: The name of the container where base blob is stored on the target storage account
+  * targetBaseBlobName: The name of the base VHD (blob) used for storing the backups in the target storage account 
+          
 
 ## Key concepts
 
