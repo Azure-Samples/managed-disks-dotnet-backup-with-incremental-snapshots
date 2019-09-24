@@ -35,7 +35,7 @@ get a FREE trial account [here](http://go.microsoft.com/fwlink/?LinkId=330212).
 - Create a local folder and download the following pre-released version of Azure Storage DotNet SDK Nuget packages:
     * [Microsoft.Azure.Storage.Blob](https://mdprereleasestoragesdks.blob.core.windows.net/dotnet/Microsoft.Azure.Storage.Blob.10.0.3-Release-jenkins-dotnet-nuget-167.nupkg)
     * [Microsoft.Azure.Storage.Common](https://mdprereleasestoragesdks.blob.core.windows.net/dotnet/Microsoft.Azure.Storage.Common.10.0.3-Release-jenkins-dotnet-nuget-167.nupkg)
-- Add the local folder where you copied the nuget packages as package sourcein the project using Visual Studio by following instructions [here](https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio#package-sources)
+- Add the local folder where you copied the nuget packages as package source in the project using Visual Studio by following instructions [here](https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio#package-sources)
 - Add the following prerelease packages by selecting "Include prerelease" checkbox by following instructions [here](https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio#find-and-install-a-package)
     * Microsoft.Azure.Storage.Blob
     * Microsoft.Azure.Storage.Common
