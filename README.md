@@ -3,39 +3,30 @@ page_type: sample
 languages:
 - csharp
 products:
-- dotnet
-description: "Add 150 character max description"
-urlFragment: "update-this-to-unique-url-stub"
+- azure
+description: "Sample to backup Managed Disks to another region using incremental snapshots"
+urlFragment: "managed-disks-dotnet-backup-with-incremental-snapshots"
 ---
 
-# Official Microsoft Sample
+# Backup Azure Managed Disks to another region with differential capability of incremental snapshots
 
-<!-- 
-Guidelines on README format: https://review.docs.microsoft.com/help/onboard/admin/samples/concepts/readme-template?branch=master
+Incremental snapshots provide differential capability – a unique capability available only in Azure Managed Disks. It enables customers and independent solution vendors (ISV) to build backup and disaster recovery solutions for Managed Disks. It allows you to get the changes between two  snapshots of the same disk, thus copying only changed data between two snapshots across regions, reducing time and cost for backup and disaster recovery. Read more about incremental snapshots [here](http://go.microsoft.com/fwlink/?LinkId=330212)
 
-Guidance on onboarding samples to docs.microsoft.com/samples: https://review.docs.microsoft.com/help/onboard/admin/samples/process/onboarding?branch=master
+In this sample, we demonstrate the following:
+- How to fetch incremental snapshots created for a disk in an Azure resource group
+- How to generate shared access signature (SAS) URI for a snapshot for getting the changes since the last snapshot 
+- How to download the first incremental snapshot as a base blob in another region. 
+- How to copy only the changes since the last snapshot to the base blob. 
+- How to create snapshots on the base blob after the changes are copied. These snapshots represent your point in time backup of the disk in another region. 
 
-Taxonomies for products and languages: https://review.docs.microsoft.com/new-hope/information-architecture/metadata/taxonomies?branch=master
--->
+## Prerequisites//Follow the instructions to generate the SAS token of a storage account https://docs.microsoft.com/en-us/azure/storage/common/storage-account-sas-create-dotnet
 
-Give a short description for your sample here. What does it do and why is it important?
-
-## Contents
-
-Outline the file contents of the repository. It helps users navigate the codebase, build configuration and any related assets.
-
-| File/folder       | Description                                |
-|-------------------|--------------------------------------------|
-| `src`             | Sample source code.                        |
-| `.gitignore`      | Define what to ignore at commit time.      |
-| `CHANGELOG.md`    | List of changes to the sample.             |
-| `CONTRIBUTING.md` | Guidelines for contributing to the sample. |
-| `README.md`       | This README file.                          |
-| `LICENSE`         | The license for the sample.                |
-
-## Prerequisites
-
-Outline the required components and tools that a user might need to have on their machine in order to run the sample. This can be anything from frameworks, SDKs, OS versions or IDE releases.
+- If you don't have a Microsoft Azure subscription you can
+get a FREE trial account [here](http://go.microsoft.com/fwlink/?LinkId=330212).
+- Use the steps [here](https//docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal) to create a service principal in your subscription. Please note down the tenantId, applicationId and secret key for the service principal. It will be used in the sample
+- Use the article [here](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/disks-incremental-snapshots) to create incremental snapshots for a managed disk that you want to backup
+- Create an Azure Storage account where you want to store your backups using the article [here](https://docs.microsoft.com/en-us/azure/storage/common/storage-quickstart-create-account?tabs=azure-portal)
+- Follow the instructions [here](https://docs.microsoft.com/en-us/azure/storage/common/storage-account-sas-create-dotnet) to generate the SAS token of the storage account 
 
 ## Setup
 
