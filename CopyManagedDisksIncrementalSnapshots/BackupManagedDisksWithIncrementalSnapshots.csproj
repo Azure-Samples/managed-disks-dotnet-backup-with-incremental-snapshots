@@ -14,10 +14,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.4.1" />
     <PackageReference Include="Microsoft.Azure.ConfigurationManager" Version="4.0.0" />
     <PackageReference Include="Microsoft.Azure.Management.Compute" Version="29.1.0" />
-    <PackageReference Include="Microsoft.Azure.Storage.Blob" Version="10.0.3-Release-jenkins-dotnet-nuget-167" />
-    <PackageReference Include="Microsoft.Azure.Storage.Common" Version="10.0.3-Release-jenkins-dotnet-nuget-167" />
     <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="5.2.1" />
   </ItemGroup>
 

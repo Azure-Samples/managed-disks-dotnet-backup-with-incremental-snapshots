@@ -1,9 +1,8 @@
 ﻿using Microsoft.Azure.Management.Compute;
 using Microsoft.Azure.Management.Compute.Models;
-using Microsoft.Azure.Storage;
-using Microsoft.Azure.Storage.Auth;
-using Microsoft.Azure.Storage.Blob;
-using Microsoft.Azure.Storage.RetryPolicies;
+using Azure.Storage;
+using Azure.Storage.Blobs;
+using Azure.Storage.Sas;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Rest;
 using Microsoft.Rest.Azure;
@@ -12,6 +11,10 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
+using Azure.Storage.Blobs.Specialized;
+using Azure.Storage.Blobs.Models;
+using Azure;
+
 
 //----------------------------------------------------------------------------------
 
@@ -65,10 +68,8 @@ namespace BackupManagedDisksWithIncrementalSnapshots
             //The name of the storage account in the target region where incremental snapshots from source region are copied to a base blob. 
             string targetStorageAccountName = "yourTargetStorageAccountName";
 
-            //The shared access signatures(SAS) token of the storage account 
-            //Learn about SAS here: https://docs.microsoft.com/en-us/azure/storage/common/storage-sas-overview
-            //Follow the instructions to generate the SAS token of a storage account https://docs.microsoft.com/en-us/azure/storage/common/storage-account-sas-create-dotnet
-            string targetStorageAccountSASToken = "sasTokenOfTargetStorageAccount";
+            
+            string targetStorageConnectionString = "targetStorageConnectionString";
 
             //the name of the container where base blob is stored on the target storage account
             string targetContainerName = "yourcontainername";
@@ -83,11 +84,11 @@ namespace BackupManagedDisksWithIncrementalSnapshots
             //Get the SAS URI of the first snapshot that will be used to copy it to the back Storage account
             string firstSnapshotSASURI = GetSASURI(subscriptionId, resourceGroupName, incrementalSnapshots[0].Name);
 
-            //Instantiate the blob client of the target storage account
-            CloudBlobClient targetStorageAccountBlobClient = InstantiateBlobClient(targetStorageAccountName, targetStorageAccountSASToken);
+            //Instantiate the page blob client
+            PageBlobClient targetBaseBlobClient = await InstantiateBasePageBlobClient(targetStorageConnectionString, targetContainerName, targetBaseBlobName);
 
             //Copy the first snapshot as base blob in the target storage account 
-            await CopyFirstSnapshotToBackupStorageAccount(targetStorageAccountBlobClient, targetContainerName, targetBaseBlobName, firstSnapshotSASURI);
+            await CopyFirstSnapshotToBackupStorageAccount(targetBaseBlobClient, firstSnapshotSASURI);
 
             //The first incremental snapshot is the previous snapshot for the second incremental snapshot
             string previousSnapshotSASUri = firstSnapshotSASURI;
@@ -102,7 +103,7 @@ namespace BackupManagedDisksWithIncrementalSnapshots
                 string currentSnapshotSASURI = GetSASURI(subscriptionId, resourceGroupName, isnapshot.Name);
 
                 //Copy the changes since the last snapshot to the target base blob 
-                await CopyChangesSinceLastSnapshotToBaseBlob(targetStorageAccountBlobClient, targetContainerName, targetBaseBlobName, previousSnapshotSASUri, currentSnapshotSASURI);
+                await CopyChangesSinceLastSnapshotToBaseBlob(targetBaseBlobClient, previousSnapshotSASUri, currentSnapshotSASURI);
 
                 //Set the current snapshot as the previous snapshot for the next snapshot
                 previousSnapshotSASUri = currentSnapshotSASURI;
@@ -113,51 +114,37 @@ namespace BackupManagedDisksWithIncrementalSnapshots
         /// <summary>
         /// This method copies the changes since the last snapshot to the target base blob 
         /// </summary>
-        /// <param name="backupStorageAccountBlobClient">An instance of CloudBlobClient which represents the storage account where the base blob is stored.</param>
+        /// <param name="backupStorageAccountBlobClient">An instance of BlobClient which represents the storage account where the base blob is stored.</param>
         /// <param name="targetContainerName">The name of container in the target storage account where the base blob is stored</param>
         /// <param name="targetBaseBlobName">The name of the base blob used for storing the backups in the target storage account </param>
         /// <param name="lastSnapshotSASUri">The SAS URI of the last incremental snapshot</param>
         /// <param name="currentSnapshotSASUri">The SAS URI of the current snapshot</param>
         /// <returns></returns>
-        private static async Task CopyChangesSinceLastSnapshotToBaseBlob(CloudBlobClient backupStorageAccountBlobClient, string targetContainerName, string targetBaseBlobName, string lastSnapshotSASUri, string currentSnapshotSASUri)
+        private static async Task CopyChangesSinceLastSnapshotToBaseBlob(PageBlobClient targetBaseBlob, string lastSnapshotSASUri, string currentSnapshotSASUri)
         {
-            
-            CloudBlobContainer backupContainer = backupStorageAccountBlobClient.GetContainerReference(targetContainerName);
 
-            CloudPageBlob targetBaseBlob = backupContainer.GetPageBlobReference(targetBaseBlobName);
-
-            CloudPageBlob snapshot = new CloudPageBlob(new Uri(currentSnapshotSASUri));
+            PageBlobClient snapshot = new PageBlobClient(new Uri(currentSnapshotSASUri));
 
             //Get the changes since the last incremental snapshots of the managed disk.
             //GetManagedDiskDiffAsync is a new method introduced to get the changes since the last snapshot
-            IEnumerable<PageDiffRange> pageRanges = await snapshot.GetManagedDiskDiffAsync(new Uri(lastSnapshotSASUri));
+            PageRangesInfo pageRanges = await snapshot.GetManagedDiskPageRangesDiffAsync(null, "",new Uri(lastSnapshotSASUri), null);
 
-
-            foreach (PageDiffRange range in pageRanges)
-            {
-
-                // If this page range is cleared, remove the old data in the backup blob.
-                if (range.IsClearedPageRange)
-                {
-                    await targetBaseBlob.ClearPagesAsync(range.StartOffset, range.EndOffset - range.StartOffset + 1);
-
-                }
-                else
-                {
-                    Int64 rangeSize = (Int64)(range.EndOffset - range.StartOffset + 1);
+            foreach (var range in pageRanges.PageRanges)
+            {   
+                    Int64 rangeSize = (Int64)(range.Length);
 
                     // Chop a range into 4MB chunchs
                     for (Int64 subOffset = 0; subOffset < rangeSize; subOffset += FourMegabyteAsBytes)
                     {
                         int subRangeSize = (int)Math.Min(rangeSize - subOffset, FourMegabyteAsBytes);
 
+                        HttpRange sourceRange = new HttpRange(subOffset, subRangeSize);
+
                         //When you use WritePagesAsync by passing the SAS URI of the source snapshot, the SDK uses Put Page From URL rest API: https://docs.microsoft.com/en-us/rest/api/storageservices/put-page-from-url
                         //When this API is invoked, the Storage service reads the data from source and copies the data to the target blob without requiring clients to buffer the data. 
-                        await targetBaseBlob.WritePagesAsync(new Uri(currentSnapshotSASUri), range.StartOffset + subOffset, subRangeSize, range.StartOffset + subOffset, null, null, null, null, null, CancellationToken.None);
+                        await targetBaseBlob.UploadPagesFromUriAsync(new Uri(currentSnapshotSASUri), sourceRange, sourceRange, null, null, null, CancellationToken.None);
 
                     }
-
-                }
             }
 
             await targetBaseBlob.CreateSnapshotAsync();
@@ -165,44 +152,43 @@ namespace BackupManagedDisksWithIncrementalSnapshots
         }
 
         /// <summary>
-        /// Instantiate an instance of CloudBlobClient which is used to perform common operations such as creating containers, blobs e.t.c. in a storage account
+        /// Instantiate an instance of BlobClient which is used to perform common operations such as creating containers, blobs e.t.c. in a storage account
         /// </summary>
         /// <param name="storageAccountName">The name of a storage account</param>
         /// <param name="storageAccountSASToken">The SAS token of a storage account</param>
         /// <returns></returns>
-        private static CloudBlobClient InstantiateBlobClient(string storageAccountName, string storageAccountSASToken)
+        private static async Task<PageBlobClient> InstantiateBasePageBlobClient(string connectionString, string targetContainerName, string targetBaseBlobName)
         {
-            StorageCredentials storageCredentials = new StorageCredentials(storageAccountSASToken);
-            CloudStorageAccount storageAccount = new CloudStorageAccount(storageCredentials, storageAccountName, null, useHttps: true);
+            BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
 
-            CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
-            return blobClient;
+            //Create the target container if not already exist 
+            BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(targetContainerName);
+
+            await containerClient.CreateIfNotExistsAsync();
+
+            PageBlobClient targetBaseBlob = containerClient.GetPageBlobClient(targetBaseBlobName);
+     
+            return targetBaseBlob;
         }
 
 
         /// <summary>
         /// This method copies the first incremental snapshot as a base blob in the target region 
         /// </summary>
-        /// <param name="backupStorageAccountBlobClient">An instance of CloudBlobClient which represents the storage account where the base blob is stored.</param>
+        /// <param name="backupStorageAccountBlobClient">An instance of BlobClient which represents the storage account where the base blob is stored.</param>
         /// <param name="targetContainerName">The name of container in the target storage account where the base blob is stored</param>
         /// <param name="targetBaseBlobName">The name of the base blob used for storing the backups in the target storage account </param>
         /// <param name="sourceSnapshotSASUri">The SAS URI of the source snapshot</param>
         /// <returns></returns>
-        private static async Task CopyFirstSnapshotToBackupStorageAccount(CloudBlobClient backupStorageAccountBlobClient, string targetContainerName, string targetBaseBlobName, string sourceSnapshotSASUri)
+        private static async Task CopyFirstSnapshotToBackupStorageAccount(PageBlobClient targetBaseBlob, string sourceSnapshotSASUri)
         {
-            //Create the target container if not already exist 
-            CloudBlobContainer backupContainer = backupStorageAccountBlobClient.GetContainerReference(targetContainerName);
-            BlobRequestOptions requestOptions = new BlobRequestOptions() { RetryPolicy = new NoRetry() };
-            await backupContainer.CreateIfNotExistsAsync(requestOptions, null);
-
-            //Create the target base page blob if not already exist 
-            CloudPageBlob targetBaseBlob = backupContainer.GetPageBlobReference(targetBaseBlobName);
-
-            CloudPageBlob sourceSnapshot = new CloudPageBlob(new Uri(sourceSnapshotSASUri));
+            
+            PageBlobClient sourceSnapshot = new PageBlobClient(new Uri(sourceSnapshotSASUri));
 
             //Get the size of the source snapshot
-            sourceSnapshot.FetchAttributes();
-            long sourceSnapshotSize = sourceSnapshot.Properties.Length;
+            var snapshotProperties = await sourceSnapshot.GetPropertiesAsync();
+
+            long sourceSnapshotSize = snapshotProperties.Value.ContentLength;
 
             //Create the target base blob with the same size as the source snapshot
             await targetBaseBlob.CreateAsync(sourceSnapshotSize);
@@ -213,7 +199,7 @@ namespace BackupManagedDisksWithIncrementalSnapshots
             //https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blob-pageblob-overview
             ///https://blogs.msdn.microsoft.com/windowsazurestorage/2012/03/26/getting-the-page-ranges-of-a-large-page-blob-in-segments/
             ///https://docs.microsoft.com/en-us/rest/api/storageservices/get-page-ranges
-            IEnumerable<PageRange> pageRanges = sourceSnapshot.GetPageRanges();
+            PageRangesInfo pageRanges = await sourceSnapshot.GetPageRangesAsync();
 
             await WritePageRanges(sourceSnapshotSASUri, targetBaseBlob, pageRanges);
 
@@ -228,18 +214,20 @@ namespace BackupManagedDisksWithIncrementalSnapshots
         /// <param name="targetBaseBlob">An instance of CloudPageBlob which represents the target base blob</param>
         /// <param name="pageRanges">Page ranges on the source snapshots that have changed since the last snapshot</param>
         /// <returns></returns>
-        private static async Task WritePageRanges(string sourceSnapshotSASUri, CloudPageBlob targetBaseBlob, IEnumerable<PageRange> pageRanges)
+        private static async Task WritePageRanges(string sourceSnapshotSASUri, PageBlobClient targetBaseBlob, PageRangesInfo pageRangeInfo)
         {
-            foreach (PageRange range in pageRanges)
+            foreach (HttpRange range in pageRangeInfo.PageRanges)
             {
-                Int64 rangeSize = (Int64)(range.EndOffset + 1 - range.StartOffset);
+                Int64 rangeSize = (Int64)(range.Length);
 
                 // Chop a range into 4MB chunchs
                 for (Int64 subOffset = 0; subOffset < rangeSize; subOffset += FourMegabyteAsBytes)
                 {
                     int subRangeSize = (int)Math.Min(rangeSize - subOffset, FourMegabyteAsBytes);
 
-                    await targetBaseBlob.WritePagesAsync(new Uri(sourceSnapshotSASUri), range.StartOffset + subOffset, subRangeSize, range.StartOffset + subOffset, null, null, null, null, null, CancellationToken.None);
+                    HttpRange sourceRange = new HttpRange(subOffset, subRangeSize);
+
+                    await targetBaseBlob.UploadPagesFromUriAsync(new Uri(sourceSnapshotSASUri), sourceRange, sourceRange, null, null, null, CancellationToken.None);
 
                 }
             }
