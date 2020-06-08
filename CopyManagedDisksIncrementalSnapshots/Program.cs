@@ -127,9 +127,15 @@ namespace BackupManagedDisksWithIncrementalSnapshots
 
             //Get the changes since the last incremental snapshots of the managed disk.
             //GetManagedDiskDiffAsync is a new method introduced to get the changes since the last snapshot
-            PageRangesInfo pageRanges = await snapshot.GetManagedDiskPageRangesDiffAsync(null, "",new Uri(lastSnapshotSASUri), null);
+            PageRangesInfo pageRangesInfo = await snapshot.GetManagedDiskPageRangesDiffAsync(null, "",new Uri(lastSnapshotSASUri), null);
 
-            foreach (var range in pageRanges.PageRanges)
+            foreach (var range in pageRangesInfo.ClearRanges)
+            {
+                await targetBaseBlob.ClearPagesAsync(range);
+
+            }
+
+            foreach (var range in pageRangesInfo.PageRanges)
             {   
                     Int64 rangeSize = (Int64)(range.Length);
 
