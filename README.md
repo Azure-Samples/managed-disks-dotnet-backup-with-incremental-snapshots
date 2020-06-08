@@ -25,7 +25,7 @@ In this sample, we demonstrate the following:
 get a FREE trial account [here](http://go.microsoft.com/fwlink/?LinkId=330212).
 - Use the article [here](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/disks-incremental-snapshots) to create incremental snapshots for a managed disk that you want to backup
 - Create an Azure Storage account where you want to store your backups using the article [here](https://docs.microsoft.com/en-us/azure/storage/common/storage-quickstart-create-account?tabs=azure-portal)
-- Follow the instructions [here](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-dotnet#copy-your-credentials-from-the-azure-portal) to generate a conection string for the storage account 
+- Follow the instructions [here](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-dotnet#copy-your-credentials-from-the-azure-portal) to generate a connection string for the storage account 
 
 ## Setup
 
